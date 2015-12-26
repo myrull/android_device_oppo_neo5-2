@@ -1,0 +1,185 @@
+##################################################################################
+### VENDOR_EDIT, OPPO All rights reserved.
+### 
+### File: - init.oppo.rc
+### Author: jiangyg@PM
+### 
+### ------------------------------- Revision History: ----------------------------
+### <author>                        <data>       <version>   <desc>
+### ------------------------------------------------------------------------------
+### jiangyg@PM                     2013-10-21                Create this file
+##################################################################################
+
+#ifdef VENDOR_EDIT
+#Zhengpeng@OnLineRD.AirService.RIL, 2013/11/4, Add for create opponvitems dir
+on boot
+	mkdir /data/opponvitems  0771 radio radio
+#endif
+
+#ifdef VENDOR_EDIT
+#wangjw@OnLineRD.framework.oppo_debug, 2013/10/22, add for setting dump mode
+on property:sys.oppo.dump=1
+	write /sys/module/restart/parameters/download_mode  1
+	write /proc/otrace_on 7978
+	write /sys/bus/msm_subsys/devices/subsys0/restart_level system 
+	write /sys/bus/msm_subsys/devices/subsys1/restart_level system
+	write /sys/bus/msm_subsys/devices/subsys2/restart_level system
+	write /sys/bus/msm_subsys/devices/subsys3/restart_level system
+	
+on property:sys.oppo.dump=0
+	write /sys/module/restart/parameters/download_mode  0
+	write /proc/otrace_on 0
+	write /sys/bus/msm_subsys/devices/subsys0/restart_level related
+	write /sys/bus/msm_subsys/devices/subsys1/restart_level related
+	write /sys/bus/msm_subsys/devices/subsys2/restart_level related
+	write /sys/bus/msm_subsys/devices/subsys3/restart_level related
+#endif
+#ifdef VENDOR_EDIT
+#Lycan.Wang@Prd.BasicDrv, 2014-04-24 Add for S2 on-off cause the cap noise
+on property:sys.oppo.cpu_idle=true
+	write /sys/module/pm_8x60/modes/cpu0/standalone_power_collapse/idle_enabled 1
+	write /sys/module/pm_8x60/modes/cpu0/power_collapse/idle_enabled 1
+
+on property:sys.oppo.cpu_idle=false
+	write /sys/module/pm_8x60/modes/cpu0/standalone_power_collapse/idle_enabled 0
+	write /sys/module/pm_8x60/modes/cpu0/power_collapse/idle_enabled 0
+#endif /* VENDOR_EDIT */
+
+#ifdef VENDOR_EDIT
+#feiser@OnlineRd.DeviceService.oppo_debug, 2012/09/11 , add for oppo Assert    
+on property:persist.sys.assert.enable=true
+    start backup_log
+    
+on property:persist.sys.assert.panic=true
+    start backup_log
+
+
+service savelog /system/xbin/savelog
+    user root
+    group log
+    disabled
+    oneshot
+#endif
+
+#ifdef VENDOR_EDIT
+#feiser@OnlineRd.DeviceService.oppo_debug, 2012/09/11 , add for oppo Assert    
+service klogd_strict /system/xbin/klogd -f /cache/admin/kernel/kinfox.txt -n -x -l 6
+    user root
+    group log
+    disabled
+    oneshot
+    
+service klogd_loose /system/xbin/klogd -f /cache/admin/kernel/kinfox.txt -n -x -l 7
+    user root
+    group log
+    disabled
+    oneshot
+    
+service backup_log /system/xbin/backup_log
+    user root
+    disabled
+    oneshot 
+#endif /* VENDOR_EDIT */
+
+#ifdef VENDOR_EDIT
+#licx@OnLineRD.framework.oppo_debug, 2013/09/18, add 
+service logcat_strict /system/bin/logcat  -f /cache/admin/apps/android.txt -r 2048 -n 10 -v time *:D
+    user root
+    disabled
+    oneshot  
+
+service logcat_loose /system/bin/logcat  -f /cache/admin/apps/android.txt -r 10240 -n 20  -v time *:V
+    user root
+    disabled
+    oneshot 
+    
+service logcat_radio /system/bin/logcat -b radio -f /cache/admin/apps/radio.txt -r 8192 -n 10  -v time *:V
+    user root
+    disabled
+    oneshot
+
+#ifdef VENDOR_EDIT
+#boning.li@pdt.framework.oppo_debug, 2014/04/1, add 
+service logcat_event /system/bin/logcat -b events -f /cache/admin/apps/events.txt -r 4096 -n 10  -v threadtime *:V
+    user root
+    disabled
+    oneshot
+
+service grab_logcat /system/bin/logcat  -f /data/GrabLog/saveAll/android.txt -v threadtime *:D
+    user root
+    disabled
+    oneshot
+
+
+service grab_radio /system/bin/logcat -b radio -f /data/GrabLog/saveAll/radio.txt -v threadtime *:V
+    user root
+    disabled
+    oneshot	
+service grab_klogd /system/xbin/klogd -f /data/GrabLog/saveAll/kinfo.txt
+    user root
+    disabled
+    oneshot
+    
+service  grab_netlog    /system/xbin/tcpdump   -i any -p -s 0 -w /cache/admin/netlog/tcpdump.pcap
+    user root
+    disabled
+    oneshot
+#endif /* VENDOR_EDIT */
+    
+    
+on property:init.svc.backup_log=stopped
+   mkdir /cache/admin 0777 system system
+   mkdir /cache/admin/apps 0777 system system
+   mkdir /cache/admin/kernel 0777 system system
+   mkdir /cache/admin/assertlog 0777 system system
+   mkdir /cache/admin/netlog 0777 system system
+   start logcat_loose
+   start logcat_radio
+   start logcat_event
+   start grab_netlog
+
+#endif /* VENDOR_EDIT */
+
+#ifdef VENDOR_EDIT
+#feiser@OnlineRd.DeviceService.oppo_debug, 2012/09/11 , add for oppo Assert   
+   start klogd_loose
+#endif /* VENDOR_EDIT */
+
+#ifdef VENDOR_EDIT  
+#Jevons@OnlineRd.DeviceService.version, 2013/8/15 , add for property self-adaptive
+service prop-self-adap /system/bin/sh /init.prop.self_adaptive.sh
+    class main
+    user root
+    oneshot
+#endif
+
+#ifdef VENDOR_EDIT
+#Lycan.Wang@Prd.BasicDrv, 2014-03-18 Add for memleak debug
+#service mem-monitor /system/bin/sh /mem_proc_slab.sh
+#    class main
+#    user root
+#endif /* VENDOR_EDIT */
+
+#ifdef VENDOR_EDIT
+#boning.li@Prd.log, 2014-03-18 Add for memleak debug
+service autochmod /system/bin/sh /autochmod.sh
+    class main
+    user root
+    disabled
+#endif /* VENDOR_EDIT */
+
+#ifdef VENDOR_EDIT
+#Roshan@OnLineRD.DeviceService, 2012/10/20, add for oppo animation, author mwalker
+service bootanim /system/bin/bootanimation
+    class main
+    user root
+    group graphics
+    disabled
+    oneshot   
+service rbootanim /system/bin/bootanimation -r
+    class main
+    user graphics
+    group graphics audio media
+    disabled
+    oneshot
+#endif /* VENDOR_EDIT */
